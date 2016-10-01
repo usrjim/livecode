@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Document</title>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="jquery.json.min.js"></script>
+        <script src="jquery.simple.websocket.min.js"></script>
+    </head>
+    <body>
+        <div>livecode example</div>
+
+        <script>
+         var socket = $.simpleWebSocket({ url: 'ws://localhost:3000/ws' });
+         socket.connect();
+         socket.listen(function(data) {
+             console.log(data);
+             if (data.payload === 20) {
+                 console.log("refresh page");
+                 location.reload();
+             }
+         });
+        </script>
+    </body>
+</html>
