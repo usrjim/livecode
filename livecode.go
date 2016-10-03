@@ -11,9 +11,10 @@ import (
 )
 
 type Config struct {
+	Origin string   `json:"origin"`
+	Server string   `json:"server"`
 	Target []string `json:"target"`
 	Log    string   `json:"log"`
-	Port   int      `json:"port"`
 }
 
 type Message struct {
@@ -22,8 +23,8 @@ type Message struct {
 }
 
 var config_json string
-var origin = "http://localhost/"
-var url = "ws://localhost:3000/ws"
+var origin string
+var url string
 
 func init() {
 	flag.StringVar(&config_json, "f", "config.json", "config file in json format.")
@@ -37,6 +38,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	origin = config.Origin
+	url = config.Server
 
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {

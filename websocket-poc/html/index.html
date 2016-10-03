@@ -17,6 +17,8 @@
              console.log(data);
              if (data.payload === 20) {
                  console.log("refresh page");
+                 socket.removeAll();
+                 socket.close();
                  location.reload();
              }
          });

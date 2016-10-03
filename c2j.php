@@ -1,6 +1,8 @@
 <?php
 
 $config = [
+  'origin' => 'http://localhost/',
+  'server' => 'ws://localhost:3000/ws',
   'target' => [
     '/path/to/file1',
     '/path/to/file2',
@@ -8,7 +10,6 @@ $config = [
     '/path/to/dir2', 
   ],
   'log' => '/path/to/log',
-  'port' => 3000,
 ];
 
 echo json_encode($config), "\n";
