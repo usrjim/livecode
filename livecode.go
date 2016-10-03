@@ -48,7 +48,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go tailFile(config.Log, *ws)
+	go tailFile(config.Log)
 	watchFiles(config.Target, *ws)
 }
 
