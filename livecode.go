@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/fsnotify/fsnotify"
 	"github.com/hpcloud/tail"
+	"golang.org/x/net/websocket"
 	"io/ioutil"
 	"log"
 )
@@ -15,7 +16,14 @@ type Config struct {
 	Port   int      `json:"port"`
 }
 
+type Message struct {
+	Type    string `json:"type"`
+	Payload string `json:"payload"`
+}
+
 var config_json string
+var origin = "http://localhost/"
+var url = "ws://localhost:3000/ws"
 
 func init() {
 	flag.StringVar(&config_json, "f", "config.json", "config file in json format.")
@@ -25,10 +33,23 @@ func main() {
 	flag.Parse()
 	content, _ := ioutil.ReadFile(config_json)
 	var config Config
-	json.Unmarshal(content, &config)
+	err := json.Unmarshal(content, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	go tailFile(config.Log)
-	watchFiles(config.Target)
+	ws, err := websocket.Dial(url, "", origin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	message := []byte("{\"type\":\"broadcast\",\"payload\":\"Connected\"}")
+	_, err = ws.Write(message)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go tailFile(config.Log, *ws)
+	watchFiles(config.Target, *ws)
 }
 
 func tailFile(f string) {
@@ -38,7 +59,7 @@ func tailFile(f string) {
 	}
 }
 
-func watchFiles(watch_paths []string) {
+func watchFiles(watch_paths []string, ws websocket.Conn) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -50,9 +71,18 @@ func watchFiles(watch_paths []string) {
 		for {
 			select {
 			case event := <-watcher.Events:
-				log.Println("event:", event)
+				// log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Println("modified file:", event.Name)
+
+					m := &Message{
+						Type:    "broadcast",
+						Payload: "reload",
+					}
+					jm, _ := json.Marshal(m)
+					ws.Write(jm)
+
+					//log.Println(string(jm))
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
