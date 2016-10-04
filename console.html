@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>livecode console</title>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="jquery.json.min.js"></script>
+        <script src="jquery.simple.websocket.min.js"></script>
+    </head>
+    <body>
+        <div id="target">
+            <a href="http://local.dev/" onclick="openwin();return false;">usa2016</a>
+        </div>
+
+        <script>
+         function getParameterByName(name) {
+             var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+             return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+         }
+         
+         var wintar;
+         function openwin() {
+             wintar = window.open($('#target a').attr('href'), '_blank');
+             connect();
+         }
+
+         $(function() {
+             var url_by_param = getParameterByName('url');
+             if (url_by_param) {
+                 var u = 'http://' + url_by_param;
+                 $('#target a').attr('href', u).html(url_by_param);
+             }
+         });
+
+         function connect() {
+             if (wintar) {
+                 var socket = $.simpleWebSocket({ url: 'ws://127.0.0.1/ws' });
+                 socket.connect();
+                 socket.listen(function(data) {
+                     //console.log(data);
+                     if (data.payload === 'reload') {
+                         console.clear();
+                         console.log("reloaded page");
+                         console.log("=====================================================");
+                         wintar.location.href = $('#target a').attr('href');
+                     } else {
+                         console.log(data.payload);
+                     }
+                 });
+             } else {
+                 console.log("click to open window first.");
+             }
+         }
+        </script>
+    </body>
+</html>
