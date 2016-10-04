@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/websocket"
 	"io/ioutil"
 	"log"
+	"time"
 )
 
 type Config struct {
@@ -46,20 +47,32 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	message := []byte("{\"type\":\"broadcast\",\"payload\":\"Connected\"}")
-	_, err = ws.Write(message)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	go tailFile(config.Log)
+	go keepalive(*ws)
+	go tailFile(config.Log, *ws)
 	watchFiles(config.Target, *ws)
 }
 
-func tailFile(f string) {
+func keepalive(ws websocket.Conn) {
+	for {
+		message := []byte("{\"type\":\"broadcast\",\"payload\":\"ping\"}")
+		_, err := ws.Write(message)
+		if err != nil {
+			log.Fatal(err)
+		}
+		time.Sleep(10000 * time.Millisecond)
+	}
+}
+
+func tailFile(f string, ws websocket.Conn) {
 	t, _ := tail.TailFile(f, tail.Config{Follow: true})
 	for line := range t.Lines {
-		log.Println(line.Text)
+		//log.Println(line.Text)
+		m := &Message{
+			Type:    "broadcast",
+			Payload: line.Text,
+		}
+		jm, _ := json.Marshal(m)
+		ws.Write(jm)
 	}
 }
 
