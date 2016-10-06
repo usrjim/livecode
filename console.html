@@ -6,13 +6,35 @@
         <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
         <script src="jquery.json.min.js"></script>
         <script src="jquery.simple.websocket.min.js"></script>
+        <script src="mustache.min.js"></script>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100" rel="stylesheet">
+        <style>
+         body { background-color: #002b36;
+                font-family: 'Roboto', sans-serif; 
+                font-size: 13px;
+                color: #eee8d5;
+         }
+         a { color: #B8CE28; }
+         #console { background-color: #073642;
+                    border: 1px solid #586e75;
+                    margin-top: 20px;
+                    padding: 10px;
+         }
+         p { margin: 0; padding: 0 }
+         p.error { color: #ea72ac; }
+         p.ping { color: #268bd2; }
+        </style>
     </head>
     <body>
         <div id="target">
-            <a href="http://local.dev/" onclick="openwin();return false;">usa2016</a>
+            <a href="http://local.dev/" onclick="openwin();return false;">local.dev</a>
         </div>
+        <div id="console"></div>
 
         <script>
+         var tpl = "<p class='{{cls}}'>{{msg}}</p>\n"
+         Mustache.parse(tpl);
+         
          function getParameterByName(name) {
              var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
              return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
@@ -32,6 +54,22 @@
              }
          });
 
+         function clear() {
+             $('#console').empty();
+         }
+         function append(msg) {
+             var cls = '';
+             if (msg === 'ping') {
+                 $('#console').append('.');
+             } else {
+                 if (msg.indexOf('ERROR') !== -1) {
+                     cls = 'error';
+                 }
+                 var rendered = Mustache.render(tpl, {cls: cls, msg: msg});
+                 $('#console').append(rendered);
+             }
+         }
+
          function connect() {
              if (wintar) {
                  var socket = $.simpleWebSocket({ url: 'ws://127.0.0.1/ws' });
@@ -39,16 +77,16 @@
                  socket.listen(function(data) {
                      //console.log(data);
                      if (data.payload === 'reload') {
-                         console.clear();
-                         console.log("reloaded page");
-                         console.log("=====================================================");
+                         clear();
+                         append("reloaded page");
                          wintar.location.href = $('#target a').attr('href');
                      } else {
-                         console.log(data.payload);
+                         append(data.payload);
+                         window.scrollTo(0,document.body.scrollHeight);
                      }
                  });
              } else {
-                 console.log("click to open window first.");
+                 append("click to open window first.");
              }
          }
         </script>

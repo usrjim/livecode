@@ -59,7 +59,7 @@ func keepalive(ws websocket.Conn) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		time.Sleep(10000 * time.Millisecond)
+		time.Sleep(30 * time.Second)
 	}
 }
 
